@@ -86,7 +86,7 @@ namespace snmalloc
 
       // Allocate permanent storage for the allocator usung temporary allocator
       MemoryProviderStateMixin<PAL>* allocated =
-        local.alloc_chunk<MemoryProviderStateMixin<PAL>, 1>();
+        local.alloc_chunk<MemoryProviderStateMixin<PAL>>();
 
       if (allocated == nullptr)
         error("Failed to initialise system!");
@@ -178,16 +178,25 @@ namespace snmalloc
     /**
      * Primitive allocator for structure that are required before
      * the allocator can be running.
+     *
+     * Size returned is rounded to the next power of two, and
+     * naturally aligned.
      */
-    template<typename T, size_t alignment, typename... Args>
+    template<size_t tsize>
+    void* alloc_chunk_untyped()
+    {
+      void* p = address_space.template reserve<true>(bits::next_pow2(tsize));
+      return p;
+    }
+
+    /**
+     * Primitive allocator for structure that are required before
+     * the allocator can be running.
+     */
+    template<typename T, typename... Args>
     T* alloc_chunk(Args&&... args)
     {
-      // Cache line align
-      size_t size = bits::align_up(sizeof(T), 64);
-      size = bits::max(size, alignment);
-      void* p = address_space.template reserve<true>(bits::next_pow2(size));
-      if (p == nullptr)
-        return nullptr;
+      auto p = alloc_chunk_untyped<sizeof(T)>();
       return new (p) T(std::forward<Args...>(args)...);
     }
 
