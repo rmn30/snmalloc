@@ -22,6 +22,13 @@ namespace snmalloc
     template<SNMALLOC_CONCEPT(ConceptPAL) PAL, bool, typename>
     friend class BackendAllocator;
 
+    /*
+     * Temporary hack so that dealloc can get at the chunk ptr for reversioning
+     * XXX think of a better way to do this.
+     */
+    template<SNMALLOC_CONCEPT(ConceptBackendGlobals) SharedStateHandle>
+    friend class LocalAllocator;
+
     capptr::Chunk<void> chunk;
 
   public:

@@ -18,6 +18,8 @@ option(SNMALLOC_QEMU_WORKAROUND "Disable using madvise(DONT_NEED) to zero memory
 option(SNMALLOC_USE_CXX17 "Build as C++17 for legacy support." OFF)
 option(SNMALLOC_NO_REALLOCARRAY "Build without reallocarray exported" ON)
 option(SNMALLOC_NO_REALLOCARR "Build without reallocarr exported" ON)
+option(SNMALLOC_TINTS "Build with support for memory tinting / versioning" OFF)
+option(SNMALLOC_TINTS_ZERO "Zero memory instead of re-tinting to estimate cost on architectures without tint support." OFF)
 # Options that apply only if we're not building the header-only library
 cmake_dependent_option(SNMALLOC_RUST_SUPPORT "Build static library for rust" OFF "NOT SNMALLOC_HEADER_ONLY_LIBRARY" OFF)
 cmake_dependent_option(SNMALLOC_STATIC_LIBRARY "Build static libraries" ON "NOT SNMALLOC_HEADER_ONLY_LIBRARY" OFF)
@@ -202,6 +204,8 @@ add_as_define(USE_SNMALLOC_STATS)
 add_as_define(SNMALLOC_QEMU_WORKAROUND)
 add_as_define(SNMALLOC_CI_BUILD)
 add_as_define(SNMALLOC_PLATFORM_HAS_GETENTROPY)
+add_as_define(SNMALLOC_TINTS)
+add_as_define(SNMALLOC_TINTS_ZERO)
 if (SNMALLOC_NO_REALLOCARRAY)
   add_as_define(SNMALLOC_NO_REALLOCARRAY)
 endif()
@@ -210,6 +214,10 @@ if (SNMALLOC_NO_REALLOCARR)
 endif()
 
 target_compile_definitions(snmalloc INTERFACE $<$<BOOL:CONST_QUALIFIED_MALLOC_USABLE_SIZE>:MALLOC_USABLE_SIZE_QUALIFIER=const>)
+
+if (SNMALLOC_TINTS)
+  target_compile_options(snmalloc INTERFACE "SHELL:-Xclang -target-feature" "SHELL:-Xclang +xcherimemversion")
+endif()
 
 # In debug and CI builds, link the backtrace library so that we can get stack
 # traces on errors.

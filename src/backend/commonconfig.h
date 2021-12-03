@@ -158,7 +158,7 @@ namespace snmalloc
     {
       return CapPtr<
         T,
-        typename B::template with_wildness<capptr::dimension::Wildness::Tame>>(
+        typename B::template with_wildness<capptr::dimension::Wildness::Tame>> (
         p.unsafe_ptr());
     }
   } // namespace detail
